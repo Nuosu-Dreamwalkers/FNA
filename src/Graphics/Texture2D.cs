@@ -39,6 +39,8 @@ namespace Microsoft.Xna.Framework.Graphics
 			}
 		}
 
+		public IntPtr NativeTexture => FNA3D.FNA3D_GetNativeTexture(GraphicsDevice.GLDevice, texture);
+
 		#endregion
 
 		#region Public Constructors
@@ -61,7 +63,8 @@ namespace Microsoft.Xna.Framework.Graphics
 			int width,
 			int height,
 			bool mipMap,
-			SurfaceFormat format
+			SurfaceFormat format,
+			TextureUsageFlags usageFlags = TextureUsageFlags.SAMPLER
 		) {
 			if (graphicsDevice == null)
 			{
@@ -119,7 +122,8 @@ namespace Microsoft.Xna.Framework.Graphics
 				Width,
 				Height,
 				LevelCount,
-				(byte) ((this is IRenderTarget) ? 1 : 0)
+				(byte) ((this is IRenderTarget) ? 1 : 0),
+				usageFlags
 			);
 		}
 

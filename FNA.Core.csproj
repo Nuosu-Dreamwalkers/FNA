@@ -251,6 +251,7 @@
 		<Compile Include="src\Graphics\Texture3D.cs" />
 		<Compile Include="src\Graphics\TextureCollection.cs" />
 		<Compile Include="src\Graphics\TextureCube.cs" />
+		<Compile Include="src\Graphics\TextureUsageFlags.cs" />
 		<Compile Include="src\Graphics\Vertices\BufferUsage.cs" />
 		<Compile Include="src\Graphics\Vertices\DynamicIndexBuffer.cs" />
 		<Compile Include="src\Graphics\Vertices\DynamicVertexBuffer.cs" />

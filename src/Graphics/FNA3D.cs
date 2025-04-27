@@ -162,7 +162,7 @@ namespace Microsoft.Xna.Framework.Graphics
 
 		[DllImport(nativeLibName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern uint FNA3D_PrepareWindowAttributes();
-		
+
 		[DllImport(nativeLibName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void FNA3D_GetDrawableSize(
 			IntPtr window,
@@ -180,6 +180,9 @@ namespace Microsoft.Xna.Framework.Graphics
 			ref FNA3D_PresentationParameters presentationParameters,
 			byte debugMode
 		);
+
+		[DllImport(nativeLibName, CallingConvention = CallingConvention.Cdecl)]
+		public static extern IntPtr FNA3D_GetNativeDevice(IntPtr device);
 
 		[DllImport(nativeLibName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void FNA3D_DestroyDevice(IntPtr device);
@@ -446,8 +449,8 @@ namespace Microsoft.Xna.Framework.Graphics
 			int width,
 			int height,
 			int levelCount,
-			byte isRenderTarget
-		);
+			byte isRenderTarget,
+			TextureUsageFlags usageFlags = TextureUsageFlags.SAMPLER);
 
 		/* IntPtr refers to an FNA3D_Texture* */
 		[DllImport(nativeLibName, CallingConvention = CallingConvention.Cdecl)]
@@ -572,6 +575,12 @@ namespace Microsoft.Xna.Framework.Graphics
 			int level,
 			IntPtr data,
 			int dataLength
+		);
+
+		[DllImport(nativeLibName, CallingConvention = CallingConvention.Cdecl)]
+		public static extern IntPtr FNA3D_GetNativeTexture(
+			IntPtr device,
+			IntPtr texture
 		);
 
 		#endregion
@@ -832,12 +841,13 @@ namespace Microsoft.Xna.Framework.Graphics
 		public static unsafe void FNA3D_SetStringMarker(
 			IntPtr device,
 			string text
-		) {
+		)
+		{
 			byte* utf8Text = SDL2.SDL.Utf8EncodeHeap(text);
 			FNA3D_SetStringMarker(device, utf8Text);
 			Marshal.FreeHGlobal((IntPtr) utf8Text);
 		}
-		
+
 		[DllImport(nativeLibName, CallingConvention = CallingConvention.Cdecl)]
 		private static extern unsafe void FNA3D_SetTextureName(
 			IntPtr device,
@@ -848,8 +858,9 @@ namespace Microsoft.Xna.Framework.Graphics
 		public static unsafe void FNA3D_SetTextureName(
 			IntPtr device,
 			IntPtr texture,
-			string text 
-		) {
+			string text
+		)
+		{
 			byte* utf8Text = SDL2.SDL.Utf8EncodeHeap(text);
 			FNA3D_SetTextureName(device, texture, utf8Text);
 			Marshal.FreeHGlobal((IntPtr) utf8Text);
@@ -897,12 +908,14 @@ namespace Microsoft.Xna.Framework.Graphics
 			IntPtr context,
 			IntPtr data,
 			int size
-		) {
+		)
+		{
 			Stream stream;
 			lock (readStreams)
 			{
 				stream = readStreams[context];
 			}
+
 			byte[] buf = new byte[size]; // FIXME: Preallocate!
 			int result = stream.Read(buf, 0, size);
 			Marshal.Copy(buf, 0, data, result);
@@ -917,6 +930,7 @@ namespace Microsoft.Xna.Framework.Graphics
 			{
 				stream = readStreams[context];
 			}
+
 			stream.Seek(n, SeekOrigin.Current);
 		}
 
@@ -928,6 +942,7 @@ namespace Microsoft.Xna.Framework.Graphics
 			{
 				stream = readStreams[context];
 			}
+
 			return (stream.Position == stream.Length) ? 1 : 0;
 		}
 
@@ -936,6 +951,7 @@ namespace Microsoft.Xna.Framework.Graphics
 		private static FNA3D_Image_EOFFunc eofFunc = INTERNAL_EOF;
 
 		private static int readGlobal = 0;
+
 		private static System.Collections.Generic.Dictionary<IntPtr, Stream> readStreams =
 			new System.Collections.Generic.Dictionary<IntPtr, Stream>();
 
@@ -947,13 +963,15 @@ namespace Microsoft.Xna.Framework.Graphics
 			int forceW = -1,
 			int forceH = -1,
 			bool zoom = false
-		) {
+		)
+		{
 			IntPtr context;
 			lock (readStreams)
 			{
 				context = (IntPtr) readGlobal++;
 				readStreams.Add(context, stream);
 			}
+
 			IntPtr pixels = FNA3D_Image_Load(
 				readFunc,
 				skipFunc,
@@ -970,6 +988,7 @@ namespace Microsoft.Xna.Framework.Graphics
 			{
 				readStreams.Remove(context);
 			}
+
 			return pixels;
 		}
 
@@ -1012,12 +1031,14 @@ namespace Microsoft.Xna.Framework.Graphics
 			IntPtr context,
 			IntPtr data,
 			int size
-		) {
+		)
+		{
 			Stream stream;
 			lock (writeStreams)
 			{
 				stream = writeStreams[context];
 			}
+
 			byte[] buf = new byte[size]; // FIXME: Preallocate!
 			Marshal.Copy(data, buf, 0, size);
 			stream.Write(buf, 0, size);
@@ -1026,6 +1047,7 @@ namespace Microsoft.Xna.Framework.Graphics
 		private static FNA3D_Image_WriteFunc writeFunc = INTERNAL_Write;
 
 		private static int writeGlobal = 0;
+
 		private static System.Collections.Generic.Dictionary<IntPtr, Stream> writeStreams =
 			new System.Collections.Generic.Dictionary<IntPtr, Stream>();
 
@@ -1036,13 +1058,15 @@ namespace Microsoft.Xna.Framework.Graphics
 			int dstW,
 			int dstH,
 			IntPtr data
-		) {
+		)
+		{
 			IntPtr context;
 			lock (writeStreams)
 			{
 				context = (IntPtr) writeGlobal++;
 				writeStreams.Add(context, stream);
 			}
+
 			FNA3D_Image_SavePNG(
 				writeFunc,
 				context,
@@ -1066,13 +1090,15 @@ namespace Microsoft.Xna.Framework.Graphics
 			int dstH,
 			IntPtr data,
 			int quality
-		) {
+		)
+		{
 			IntPtr context;
 			lock (writeStreams)
 			{
 				context = (IntPtr) writeGlobal++;
 				writeStreams.Add(context, stream);
 			}
+
 			FNA3D_Image_SaveJPG(
 				writeFunc,
 				context,
